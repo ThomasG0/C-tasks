@@ -4,13 +4,13 @@
 // ....
 struct TItem
 {
-	int value;
-	time_t timestamp;
-	TItem(int v):
-		value(v),
-		timestamp(std::time(0))
-	{}
-	//...
+    int value;
+    time_t timestamp;
+    TItem(int v):
+        value(v),
+        timestamp(std::time(0))
+    {}
+    //...
 };
 
 using Items = std::vector<TItem>;
@@ -18,21 +18,21 @@ using Items = std::vector<TItem>;
 template<int... args>
 Items MakeItemsSimple()
 {
-	std::vector<TItem> example = {args...};
+    std::vector<TItem> example = {args...};
     return example;
 }
 
 auto MakePredicate(Items items)
 {
-	return [items](int check) -> bool {
-				bool f = false;
-				for(int i = 0; i < items.size(); ++i)
-					if (items[i].value == check) {
-						f = true;
-						break;
-					}
-				return f;
-			};
+    return [items](int check) -> bool {
+                bool f = false;
+                for(int i = 0; i < items.size(); ++i)
+                    if (items[i].value == check) {
+                        f = true;
+                        break;
+                    }
+                return f;
+            };
 }
 
 int main(void)
@@ -46,5 +46,5 @@ assert(isFound(7) == false);
 assert(isFoundNew(8) == false);
 assert(isFoundNew(6) == false);
 
-	return 0;
+    return 0;
 }
