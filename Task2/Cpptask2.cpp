@@ -1,7 +1,9 @@
 #include <ctime>
 #include <vector>
 #include <assert.h>
+#include <algorithm>
 // ....
+
 struct TItem
 {
     int value;
@@ -24,21 +26,21 @@ Items MakeItemsSimple()
 
 auto MakePredicate(Items items)
 {
-    return [items](int check) -> bool {
-                bool f = false;
-                for(int i = 0; i < items.size(); ++i)
-                    if (items[i].value == check) {
-                        f = true;
-                        break;
-                    }
-                return f;
+    return [items](const int check) -> bool
+            {
+                return std::find_if(items.begin(), items.end(),
+                                        [check](const TItem elem) -> bool
+                                            {
+                                                return (elem.value == check);
+                                            }
+                                    ) != items.end();
             };
 }
 
-int main(void)
+int main()
 {
-Items items = MakeItemsSimple<1, 1, 4, 5, 6>();
-Items newItems = MakeItemsSimple();
+Items items = MakeItemsSimple<0, 1, 4, 5, 6>();
+Items newItems = MakeItemsSimple<7, 15, 1>();
 auto isFound = MakePredicate(items);
 auto isFoundNew = MakePredicate(newItems);
 assert(isFound(6) == true);
