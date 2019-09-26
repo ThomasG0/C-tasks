@@ -43,9 +43,9 @@ Items items = MakeItemsSimple<0, 1, 4, 5, 6>();
 Items newItems = MakeItemsSimple<7, 15, 1>();
 auto isFound = MakePredicate(items);
 auto isFoundNew = MakePredicate(newItems);
-assert(isFound(6) == true);
+assert(isFound(0) == true);
 assert(isFound(7) == false);
-assert(isFoundNew(8) == false);
+assert(isFoundNew(7) == true);
 assert(isFoundNew(6) == false);
 
     return 0;
