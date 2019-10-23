@@ -20,7 +20,7 @@ struct g_allocator
     g_allocator()
     {}
     template <class Pos>
-		g_allocator (const g_allocator<Pos,Pos>&)
+		g_allocator (const g_allocator<Pos,Pos>& non)
 		{}
     value_type* allocate (size_t vol) {
         return reinterpret_cast<value_type*>(S::operator new(vol*sizeof(value_type)));
