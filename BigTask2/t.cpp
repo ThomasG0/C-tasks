@@ -2,8 +2,23 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
+#include <functional>
+#include <sstream>
 using namespace std;   
 
+std::string IntConv(const int i)
+{
+	std::ostringstream oss;
+    oss<< i;
+    return oss.str();
+}
+std::string DoubleConv(const double i)
+{
+	std::ostringstream oss;
+    oss<< i;
+    return oss.str();
+}
 template<class Key,class Basic,class Stage>
 class Mark_Factory
 {
@@ -29,18 +44,28 @@ class Mark_Factory
 		{
 			return	_gimme(key)(st);
 		}
+		Basic* gimme(Key key,double st)
+		{
+			std::vector<double> v = {st};
+			return	_gimme(key)(v);
+		}
 		Basic* gimme(Key key,int st)
 		{
-			return	_gimme(key)(std::vector<double>((double)st));
+			std::vector<double> v = {(double)st};
+			return	_gimme(key)(v);
 		}
 		Basic* gimme(Key key)
 		{
-			return	_gimme(key)(std::vector<double>((double)0));
+			std::vector<double> v = {1.};
+			return	_gimme(key)(v);
 		}
 };
 
 class Function
 {
+	std::function<double(double)> val;
+	std::function<double(double)> der;
+	std::string strp;
 	public:
 		std::vector<double> vals;
 		Function(std::vector<double> v): vals(v)
@@ -51,15 +76,136 @@ class Function
 		{}
 		Function()
 		{}
+		Function(const Function& other)
+		{
+			this->val = other.val;
+			this->der = other.der;
+			this->vals = other.vals;
+		}
 		virtual ~Function(){}
-		virtual void who() = 0;
+		virtual void who() {}
+		virtual double value(const double i = 0) const { return val(i);}
+		virtual double derivative(const double i = 0) const { return der(i);}
+		friend Function operator+(const Function& a, const Function& b);
+		friend Function operator-(const Function& a, const Function& b);
+		friend Function operator*(const Function& a, const Function& b);
+		friend Function operator/(const Function& a, const Function& b);
+		template<class T>
+		friend Function operator+(const Function& a, T b);
+		template<class T>
+		friend Function operator+(T a,const Function& b);
+		template<class T>
+		friend Function operator-(const Function& a, T b);
+		template<class T>
+		friend Function operator-(T a,const Function& b);
+		template<class T>
+		friend Function operator*(const Function& a, T b);
+		template<class T>
+		friend Function operator*(T a,const Function& b);
+		template<class T>
+		friend Function operator/(const Function& a, T b);
+		template<class T>
+		friend Function operator/(T a,const Function& b);
+		Function operator=(const Function& other)
+		{
+			this->val = other.val;
+			this->der = other.der;
+			this->vals = other.vals;
+			return *this;
+		}
+		virtual std::string ToString() const
+		{
+			return strp;
+		}
 };
+
+template<class T>
+Function operator+(const Function& a, T b)
+{
+	throw "LOgic error!";
+}
+template<class T>
+Function operator+(T a,const Function& b)
+{
+	throw "LOgic error!";
+}
+
+template<class T>
+Function operator-(const Function& a, T b)
+{
+	throw "LOgic error!";
+}
+template<class T>
+Function operator-(T a,const Function& b)
+{
+	throw "LOgic error!";
+}
+
+template<class T>
+Function operator*(const Function& a, T b)
+{
+	throw "LOgic error!";
+}
+template<class T>
+Function operator*(T a,const Function& b)
+{
+	throw "LOgic error!";
+}
+
+template<class T>
+Function operator/(const Function& a, T b)
+{
+	throw "LOgic error!";
+}
+template<class T>
+Function operator/(T a,const Function& b)
+{
+	throw "LOgic error!";
+}
+Function operator+(const Function& a, const Function& b)
+{
+	Function new_el;
+	new_el.val = [&](double j){return a.value(j) + b.value(j);};
+	new_el.der = [&](double j){return a.derivative(j) + b.derivative(j);};
+	new_el.strp += a.ToString() + "+" + b.ToString();
+	return new_el;
+}
+Function operator-(const Function& a, const Function& b)
+{
+	Function new_el;
+	new_el.val = [&](double j){return a.value(j) - b.value(j);};
+	new_el.der = [&](double j){return a.derivative(j) - b.derivative(j);};
+	new_el.strp += a.ToString() + "-" + b.ToString();
+	return new_el;
+}
+Function operator*(const Function& a, const Function& b)
+{
+	Function new_el;
+	new_el.val = [&](double j){return a.value(j) * b.value(j);};
+	new_el.der = [&](double j){return a.derivative(j) * b.derivative(j);};
+	new_el.strp += a.ToString() + "*" + b.ToString();
+	return new_el;
+}
+Function operator/(const Function& a, const Function& b)
+{
+	Function new_el;
+	new_el.val = [&](double j){return a.value(j) / b.value(j);};
+	new_el.der = [&](double j){return a.derivative(j) / b.derivative(j);};
+	new_el.strp += a.ToString() + "/" + b.ToString();
+	return new_el;
+}
 
 class Const: public Function
 {
 	using Function::Function;
 	public:
 		void who() {std::cout<<"i am const\n";}
+		double value(const double i = 0) const {return this->vals[0];}
+		double derivative(const double i = 0) {return 0.0;}
+		std::string ToString() const
+		{
+			return DoubleConv(this->vals[0]);
+		}
 };
 
 class Ident: public Function
@@ -67,6 +213,8 @@ class Ident: public Function
 	using Function::Function;
 	public:
 		void who() {std::cout<<"i am ident\n";}
+		double value(const double i = 0) const {return 0.0;}
+		double derivative(const double i = 0) const {return 0.0;}
 };
 
 class Exp: public Function
@@ -74,13 +222,48 @@ class Exp: public Function
 	using Function::Function;
 	public:
 		void who() {std::cout<<"i am exp\n";}
+		double value(const double i = 0) const {return exp(this->vals[0]*i);}
+		double derivative(const double i = 0) const {return this->vals[0]*exp(this->vals[0]*i);}
+		std::string ToString() const
+		{
+			return std::string("e^") + DoubleConv(this->vals[0]) + "x";
+		}
 };
 
 class Polynomial: public Function
 {
 	using Function::Function;
 	public:
-	void who() {std::cout<<"i am polynomial\n";}
+		void who() {std::cout<<"i am polynomial\n";}
+		double value(const double i = 0) const
+		{
+			if (this->vals.size() < 1) return 0.0;
+			 double sum = this->vals[0];
+			 for(int j = 1; j < this->vals.size(); ++j)
+			 {
+				 sum += this->vals[j]*pow(i,j);
+			 }
+			 return sum;
+		}
+		double derivative(const double i = 0) const
+		{
+			 if (this->vals.size() < 2) return 0.0;
+			 double sum = this->vals[1];
+			 for(int j = 2; j < this->vals.size(); ++j) 
+			 {
+				 sum += this->vals[j]*j*pow(i,j-1);
+			 }
+			 return sum;
+		}
+		std::string ToString() const
+		{
+			std::string sum = DoubleConv(this->vals[0]);;
+			for(int i = 1; i <this->vals.size(); ++i)
+			{
+				sum += "+" + DoubleConv(this->vals[i]) + "x^" + IntConv(i);
+			}
+			return std::string("x^") + DoubleConv(this->vals[0]);
+		}
 };
 
 class Power: public Function
@@ -88,6 +271,18 @@ class Power: public Function
 	using Function::Function;
 	public:
 		void who() {std::cout<<"i am power\n";}
+		double value(const double i = 0) const
+		{
+			return pow(i,this->vals[0]);
+		}
+		double derivative(const double i = 0) const
+		{
+			return this->vals[0]*pow(i,this->vals[0]-1);
+		}
+		std::string ToString() const
+		{
+			return std::string("x^") + DoubleConv(this->vals[0]);
+		}
 };
 
 int main(void)
@@ -100,11 +295,8 @@ int main(void)
     Factory.CreateTrack<Polynomial>("polynomial");
     Factory.CreateTrack<Exp>("exp");
     Factory.gimme("polynomial",{1,2,3});
-    Function *a = Factory.gimme("const",1.3);
-    a->who();
-    Function *b = Factory.gimme("exp");
-    b->who();
-    std::vector<double> aq(1.1);
-    Polynomial u();
+    auto a = Factory.gimme("const",1.3);
+	auto e = Factory.gimme("exp");
+	auto p = *a+*e;
     return 0;
 }
