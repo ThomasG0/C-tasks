@@ -20,6 +20,7 @@ std::string DoubleConv(const double i)
     oss<< i;
     return oss.str();
 }
+
 template<class Key,class Basic,class Stage>
 class Mark_Factory
 {
@@ -64,11 +65,12 @@ class Mark_Factory
 
 class Function
 {
-	std::function<double(double)> val;
-	std::function<double(double)> der;
-	std::string strp;
-	public:
+	protected:
+		std::function<double(double)> val;
+		std::function<double(double)> der;
+		std::string strp;
 		std::vector<double> vals;
+	public:
 		Function(const std::vector<double> v): vals(v)
 		{}
 		Function(const double i): vals(std::vector({i}))
@@ -81,95 +83,24 @@ class Function
 			this->der = other.der;
 			this->vals = other.vals;
 		}
-		Function operator=(const Function& other)
-		{
-			this->val = other.val;
-			this->der = other.der;
-			this->vals = other.vals;
-			return *this;
-		}
-		constexpr operator Function*() { Function *a = this; return a; }
-		virtual ~Function(){}
+
 		virtual void who() {}
 		virtual double value(const double i = 0) const { return val(i);}
 		virtual double derivative(const double i = 0) const { return der(i);}
 		virtual std::string ToString() const {return strp;}
-		friend Function operator+(const Function& a, const Function& b);
-		friend Function operator-(const Function& a, const Function& b);
-		friend Function operator*(const Function& a, const Function& b);
-		friend Function operator/(const Function& a, const Function& b);
+		
+		template<class T>
+		Function operator+ (const T& other) const;
+		template<class T>
+		Function operator- (const T& other) const;
+		template<class T>
+		Function operator* (const T& other) const;
+		template<class T>
+		Function operator/ (const T& other) const;
+		
+		virtual ~Function(){}
+
 };
-
-template<class T>
-Function operator+(const Function& a, const T& b)
-{
-	throw std::logic_error("bad_operand");
-}
-
-template<class T>
-Function operator-(const Function& a, const T& b)
-{
-	throw std::logic_error("bad_operand");
-}
-template<class T>
-Function operator-(const T& a,const Function& b)
-{
-	throw std::logic_error("bad_operand");
-}
-
-template<class T>
-Function operator*(const Function& a, const T& b)
-{
-	throw std::logic_error("bad_operand");
-}
-template<class T>
-Function operator*(const T& a,const Function& b)
-{
-	throw std::logic_error("bad_operand");
-}
-
-template<class T>
-Function operator/(const Function& a, const T& b)
-{
-	throw std::logic_error("bad_operand");
-}
-template<class T>
-Function operator/(const T& a,const Function& b)
-{
-	throw std::logic_error("bad_operand");
-}
-Function operator+(const Function& a, const Function& b)
-{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) + b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) + b.derivative(j);};
-	new_el.strp += a.ToString() + "+" + b.ToString();
-	return new_el;
-}
-Function operator-(const Function& a, const Function& b)
-{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) - b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) - b.derivative(j);};
-	new_el.strp += a.ToString() + "-" + b.ToString();
-	return new_el;
-}
-Function operator*(const Function& a, const Function& b)
-{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) * b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j)*b.value(j) + b.derivative(j)*a.value(j);};
-	new_el.strp += a.ToString() + "*" + b.ToString();
-	return new_el;
-}
-Function operator/(const Function& a, const Function& b)
-{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) / b.value(j);};
-	new_el.der = [&](double j){return (a.derivative(j)*b.value(j) - b.derivative(j)*a.value(j))/(b.value(j)*b.value(j)) ;};
-	new_el.strp += a.ToString() + "/" + b.ToString();
-	return new_el;
-}
 
 class Const: public Function
 {
@@ -177,7 +108,7 @@ class Const: public Function
 	public:
 		void who() {std::cout<<"i am const\n";}
 		double value(const double i = 0) const {return this->vals[0];}
-		double derivative(const double i = 0) {return 0.0;}
+		double derivative(const double i = 0) const {return 0.0;}
 		std::string ToString() const
 		{
 			return DoubleConv(this->vals[0]);
@@ -265,6 +196,119 @@ class Power: public Function
 		}
 };
 
+template<class T>
+Function Function::operator+(const T& other) const
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+	else
+	{
+		Function new_el;
+		new_el.val = [&](double j){return this->value(j) + other.value(j);};
+		new_el.der = [&](double j){return this->derivative(j) + other.derivative(j);};
+		new_el.strp += this->ToString() + "+" + other.ToString();
+		return new_el;
+	}
+}
+template<class T>
+Function Function::operator-(const T& other) const
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		Function new_el;
+		new_el.val = [&](double j){return this->value(j) - other.value(j);};
+		new_el.der = [&](double j){return this->derivative(j) - other.derivative(j);};
+		new_el.strp += this->ToString() + "-" + other.ToString();
+		return new_el;
+	}
+}
+template<class T>
+Function Function::operator*(const T& other) const
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		Function new_el;
+		new_el.val = [&](double j){return this->value(j) * other.value(j);};
+		new_el.der = [&](double j){return this->derivative(j)*other.value(j) + other.derivative(j)*this->value(j);};
+		new_el.strp += this->ToString() + "*" + other.ToString();
+		return new_el;
+	}
+}
+template<class T>
+Function Function::operator/(const T& other) const
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		Function new_el;
+		new_el.val = [&](double j){return this->value(j) / other.value(j);};
+		new_el.der = [&](double j){return (this->derivative(j)*other.value(j) - other.derivative(j)*this->value(j))/(other.value(j)*other.value(j)) ;};
+		new_el.strp += this->ToString() + "/" + other.ToString();
+		return new_el;
+	}
+}
+template<class T>
+Function operator+(const T& other,const Function& a)
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		return other.operator+(a);
+	}
+}
+template<class T>
+Function operator-(const T& other,const Function& a)
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		return other.operator-(a);
+	}
+}
+template<class T>
+Function operator*(const T& other,const Function& a)
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		return other.operator*(a);
+	}
+}
+template<class T>
+Function operator/(const T& other,const Function& a)
+{
+	if constexpr (std::is_base_of_v<Function, T> == false)
+	{
+        throw std::logic_error("bad_operand");
+    }
+    else
+    {
+		return other.operator/(a);
+	}
+}
+
 double GD(const Function& g, double eps, int j)
 {
 	double y = 1.,x = 0.;
@@ -289,13 +333,9 @@ int main(void)
     Factory.CreateTrack<Power>("power");
     Factory.CreateTrack<Polynomial>("polynomial");
     Factory.CreateTrack<Exp>("exp");
+    
     auto b = Factory.gimme("polynomial",{1,2,1});
     auto a = Factory.gimme("const",1.3);
 	auto e = Factory.gimme("ident");
-	Const y(1.3);
-	//cout<<y.value(1);
-	auto p = *e * *e * *e;
-	p = p;
-	cout<<p.derivative(5);
     return 0;
 }
