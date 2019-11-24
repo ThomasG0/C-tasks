@@ -5,6 +5,7 @@
 #include <cmath>
 #include <functional>
 #include <sstream>
+#include <stdexcept>
 using namespace std;   
 
 std::string IntConv(const int i)
@@ -122,34 +123,34 @@ class Function
 template<class T>
 Function operator+(const Function& a, T b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 template<class T>
 Function operator+(T a,const Function& b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 
 template<class T>
 Function operator-(const Function& a, T b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 template<class T>
 Function operator-(T a,const Function& b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 
 template<class T>
 Function operator*(const Function& a, T b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 template<class T>
 Function operator*(T a,const Function& b)
 {
-	throw "LOgic error!";
+	throw std::logic_error();
 }
 
 template<class T>
