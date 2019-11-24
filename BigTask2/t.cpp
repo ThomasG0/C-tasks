@@ -69,11 +69,9 @@ class Function
 	std::string strp;
 	public:
 		std::vector<double> vals;
-		Function(std::vector<double> v): vals(v)
+		Function(const std::vector<double> v): vals(v)
 		{}
-		Function(int i): vals(std::vector<double>((double)i))
-		{}
-		Function(double i): vals(std::vector<double>(i))
+		Function(const double i): vals(std::vector({i}))
 		{}
 		Function()
 		{}
@@ -91,22 +89,6 @@ class Function
 		friend Function operator-(const Function& a, const Function& b);
 		friend Function operator*(const Function& a, const Function& b);
 		friend Function operator/(const Function& a, const Function& b);
-		template<class T>
-		friend Function operator+(const Function& a, T b);
-		template<class T>
-		friend Function operator+(T a,const Function& b);
-		template<class T>
-		friend Function operator-(const Function& a, T b);
-		template<class T>
-		friend Function operator-(T a,const Function& b);
-		template<class T>
-		friend Function operator*(const Function& a, T b);
-		template<class T>
-		friend Function operator*(T a,const Function& b);
-		template<class T>
-		friend Function operator/(const Function& a, T b);
-		template<class T>
-		friend Function operator/(T a,const Function& b);
 		Function operator=(const Function& other)
 		{
 			this->val = other.val;
@@ -118,50 +100,46 @@ class Function
 		{
 			return strp;
 		}
+		operator Function*() { Function *a = this; return a; }
 };
 
 template<class T>
-Function operator+(const Function& a, T b)
+Function operator+(const Function& a, const T& b)
 {
-	throw std::logic_error();
-}
-template<class T>
-Function operator+(T a,const Function& b)
-{
-	throw std::logic_error();
+	throw std::logic_error("bad_operand");
 }
 
 template<class T>
-Function operator-(const Function& a, T b)
+Function operator-(const Function& a, const T& b)
 {
-	throw std::logic_error();
+	throw std::logic_error("bad_operand");
 }
 template<class T>
-Function operator-(T a,const Function& b)
+Function operator-(const T& a,const Function& b)
 {
-	throw std::logic_error();
-}
-
-template<class T>
-Function operator*(const Function& a, T b)
-{
-	throw std::logic_error();
-}
-template<class T>
-Function operator*(T a,const Function& b)
-{
-	throw std::logic_error();
+	throw std::logic_error("bad_operand");
 }
 
 template<class T>
-Function operator/(const Function& a, T b)
+Function operator*(const Function& a, const T& b)
 {
-	throw "LOgic error!";
+	throw std::logic_error("bad_operand");
 }
 template<class T>
-Function operator/(T a,const Function& b)
+Function operator*(const T& a,const Function& b)
 {
-	throw "LOgic error!";
+	throw std::logic_error("bad_operand");
+}
+
+template<class T>
+Function operator/(const Function& a, const T& b)
+{
+	throw std::logic_error("bad_operand");
+}
+template<class T>
+Function operator/(const T& a,const Function& b)
+{
+	throw std::logic_error("bad_operand");
 }
 Function operator+(const Function& a, const Function& b)
 {
@@ -298,6 +276,8 @@ int main(void)
     Factory.gimme("polynomial",{1,2,3});
     auto a = Factory.gimme("const",1.3);
 	auto e = Factory.gimme("exp");
-	auto p = *a+*e;
+	Const y(1.3);
+	cout<<y.value(1);
+	auto p = y + 898.07;
     return 0;
 }
