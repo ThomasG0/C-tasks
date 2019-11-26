@@ -6,22 +6,23 @@
 #include <functional>
 #include <sstream>
 #include <stdexcept>
+
 using namespace std;   
 
-std::string IntConv(const int i)
+std::string IntConv(const int i) // Предстиавление целого числа в виде строки
 {
 	std::ostringstream oss;
     oss<< i;
     return oss.str();
 }
-std::string DoubleConv(const double i)
+std::string DoubleConv(const double i) // Представление вещественного числа в виде строки
 {
 	std::ostringstream oss;
     oss<< i;
     return oss.str();
 }
 
-template<class Key,class Basic,class Stage>
+template<class Key,class Basic,class Stage> // Фабрика. Ключ, Базовый класс, Тип принимаемого значения конструктором базового класса.
 class Mark_Factory
 {
 	private:
@@ -38,38 +39,38 @@ class Mark_Factory
 		}
 	public:
 		template<class Given>
-		void CreateTrack(Key key)
+		void CreateTrack(Key key) // Создаем дорожки, с которых будем забирать элементы производных типов (отн. базового)
 		{
 			giver[key] = &maker<Given>;
 		}
-		Basic* gimme(Key key,Stage st)
+		Basic* gimme(Key key,Stage st) // Если дан вектор
 		{
 			return	_gimme(key)(st);
 		}
-		Basic* gimme(Key key,double st)
+		Basic* gimme(Key key,double st) // Если дано число
 		{
 			std::vector<double> v = {st};
 			return	_gimme(key)(v);
 		}
-		Basic* gimme(Key key,int st)
+		Basic* gimme(Key key,int st) // Если дано число
 		{
 			std::vector<double> v = {(double)st};
 			return	_gimme(key)(v);
 		}
-		Basic* gimme(Key key)
+		Basic* gimme(Key key) // Если значения нет (по умолчанию 1)
 		{
 			std::vector<double> v = {1.};
 			return	_gimme(key)(v);
 		}
 };
 
-class Function
+class Function // Базовый класс
 {
 	protected:
-		std::function<double(double)> val;
-		std::function<double(double)> der;
-		std::string strp;
-		std::vector<double> vals;
+		std::function<double(double)> val; // адресс функции, считающей значение функции в точке
+		std::function<double(double)> der; // Адресс функции, считающей значение производной функции в точке
+		std::string strp; // Строковое представление (поддерживается только у потомков)
+		std::vector<double> vals; // Вектор значений для аргументов функции (если не полином, то занимает только одну ячейку)
 	public:
 		Function(const std::vector<double> v): vals(v)
 		{}
@@ -102,7 +103,7 @@ class Function
 
 };
 
-class Const: public Function
+class Const: public Function // Константная функция
 {
 	using Function::Function;
 	public:
@@ -115,7 +116,7 @@ class Const: public Function
 		}
 };
 
-class Ident: public Function
+class Ident: public Function // ТОжд. функция (f = x)
 {
 	using Function::Function;
 	public:
@@ -128,7 +129,7 @@ class Ident: public Function
 		}
 };
 
-class Exp: public Function
+class Exp: public Function // Экспонента (e^mx)
 {
 	using Function::Function;
 	public:
@@ -141,7 +142,7 @@ class Exp: public Function
 		}
 };
 
-class Polynomial: public Function
+class Polynomial: public Function // Полином (a0 + a1*x + a2*x^2 + ... + an*x^n)
 {
 	using Function::Function;
 	public:
@@ -177,7 +178,7 @@ class Polynomial: public Function
 		}
 };
 
-class Power: public Function
+class Power: public Function //  Степенная функция (x^k)
 {
 	using Function::Function;
 	public:
@@ -200,7 +201,7 @@ template<class T,class S>
 Function operator+(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
-	{
+	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
         throw std::logic_error("bad_operand");
     }
 	else
@@ -216,7 +217,7 @@ template<class T,class S>
 Function operator-(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
-	{
+	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
         throw std::logic_error("bad_operand");
     }
 	else
@@ -224,7 +225,6 @@ Function operator-(const T& a, const S& b)
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) - b.value(j);};
 		new_el.der = [&](double j){return a.derivative(j) - b.derivative(j);};
-		new_el.strp += a.ToString() + "-" + b.ToString();
 		return new_el;
 	}
 }
@@ -232,7 +232,7 @@ template<class T,class S>
 Function operator*(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
-	{
+	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
         throw std::logic_error("bad_operand");
     }
 	else
@@ -240,7 +240,6 @@ Function operator*(const T& a, const S& b)
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) * b.value(j);};
 		new_el.der = [&](double j){return a.derivative(j) * b.derivative(j);};
-		new_el.strp += a.ToString() + "*" + b.ToString();
 		return new_el;
 	}
 }
@@ -248,7 +247,7 @@ template<class T,class S>
 Function operator/(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
-	{
+	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
         throw std::logic_error("bad_operand");
     }
 	else
@@ -256,12 +255,11 @@ Function operator/(const T& a, const S& b)
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) / b.value(j);};
 		new_el.der = [&](double j){return a.derivative(j) / b.derivative(j);};
-		new_el.strp += a.ToString() + "/" + b.ToString();
 		return new_el;
 	}
 }
 
-double GD(const Function& g, double eps, int j)
+double GD(const Function& g, double eps, int j) // Метод градиентного спуска с квадратично убывающим показателем (сходится при любом начальном приближении)
 {
 	double y = 1.,x = 0.;
 	int count = 0;
@@ -274,4 +272,9 @@ double GD(const Function& g, double eps, int j)
 		x = x - (1/std::pow(i,2))*f.derivative(x); x;
 	}
 	return x;
+}
+
+int main(void)
+{
+	return 0;
 }

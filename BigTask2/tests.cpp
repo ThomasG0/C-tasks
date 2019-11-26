@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "liba.h"
+
 TEST(exeptions,Subtest_1)
 {
 	Mark_Factory<std::string,Function,std::vector<double>> Factory;
@@ -140,15 +141,107 @@ TEST(tostring, Subtest_3)
 }
 TEST(values,Subtest_4)
 {
+	Mark_Factory<std::string,Function,std::vector<double>> Factory;
+	Factory.CreateTrack<Const>("const");
+    Factory.CreateTrack<Ident>("ident");
+    Factory.CreateTrack<Power>("power");
+    Factory.CreateTrack<Polynomial>("polynomial");
+    Factory.CreateTrack<Exp>("exp");
+    
+    // Factory block
+    auto p = Factory.gimme("polynomial",{1,2,1});
+    auto c = Factory.gimme("const",1.3);
+	auto x = Factory.gimme("ident");
+	auto e = Factory.gimme("exp");
+	auto q = Factory.gimme("power",5);
+	
+	ASSERT_DOUBLE_EQ(p->value(5),36.);
+	ASSERT_DOUBLE_EQ(c->value(4),1.3);
+	ASSERT_DOUBLE_EQ(x->value(3),3.);
+	ASSERT_DOUBLE_EQ(e->value(2),std::exp(2));
+	ASSERT_DOUBLE_EQ(q->value(1),1.);
+
+	//Native block
+	Polynomial p1({1,2,3});
+	Const c1(1.3);
+	Ident x1();
+	Exp e1();
+	Power q1(5);
+
+	ASSERT_DOUBLE_EQ(p1.value(0),1.);
+	ASSERT_DOUBLE_EQ(c1.value(-1),1.3);
+	ASSERT_DOUBLE_EQ(x1.value(0),0.);
+	ASSERT_DOUBLE_EQ(e1.value(0),0.);
+	ASSERT_DOUBLE_EQ(q1.value(-1),-1.);
+	
+	//General block
+	auto pp = *p + p1
+	ASSERT_DOUBLE_EQ(pp->value(1),8.);
+	auto pp = *p - p1
+	ASSERT_DOUBLE_EQ(pp->value(2),0.);
+	auto pp = *p * p1
+	ASSERT_DOUBLE_EQ(pp->value(-1),0.);
+	auto pp = *p / p1
+	ASSERT_DOUBLE_EQ(pp->value(5),36.);
 }
 TEST(derivatives, Subtest_5)
 {
+	Mark_Factory<std::string,Function,std::vector<double>> Factory;
+	Factory.CreateTrack<Const>("const");
+    Factory.CreateTrack<Ident>("ident");
+    Factory.CreateTrack<Power>("power");
+    Factory.CreateTrack<Polynomial>("polynomial");
+    Factory.CreateTrack<Exp>("exp");
+    // Factory block
+    auto p = Factory.gimme("polynomial",{1,2,1});
+    auto c = Factory.gimme("const",1.3);
+	auto x = Factory.gimme("ident");
+	auto e = Factory.gimme("exp");
+	auto q = Factory.gimme("power",5);
+	
+	ASSERT_DOUBLE_EQ(p->derivative(1),5.);
+	ASSERT_DOUBLE_EQ(c->derivative(2),0.);
+	ASSERT_DOUBLE_EQ(x->derivative(3),1.);
+	ASSERT_DOUBLE_EQ(e->derivative(4),std::exp(4.));
+	ASSERT_DOUBLE_EQ(q->derivative(5),3125.);
+
+	Polynomial p1({1,2,3});
+	Const c1(1.3);
+	Ident x1();
+	Exp e1();
+	Power q1(5);
+
+	ASSERT_DOUBLE_EQ(p1->derivative(1),5.);
+	ASSERT_DOUBLE_EQ(c1->derivative(2),0.);
+	ASSERT_DOUBLE_EQ(x1->derivative(3),1.);
+	ASSERT_DOUBLE_EQ(e1->derivative(4),std::exp(4.));
+	ASSERT_DOUBLE_EQ(q1->derivative(5),3125.);
+	
+	//General block
+	auto pp = *p + p1;
+	ASSERT_DOUBLE_EQ(pp->derivative(1),10.);
+	auto pp = *p - pp;
+	ASSERT_DOUBLE_EQ(pp->derivative(1),-5.);
+	auto pp = *p * p1;
+	ASSERT_DOUBLE_EQ(pp->derivative(1),40.);
+	auto pp = *p / pp;
+	ASSERT_DOUBLE_EQ(pp->derivative(1),(5.*16. - 40.*4.) / (16.*16.));
+	
 }
 TEST(operators,Subtest_6)
 {
 }
 TEST(Gradient,Subtest_7)
 {
+	Mark_Factory<std::string,Function,std::vector<double>> Factory;
+	Factory.CreateTrack<Const>("const");
+    Factory.CreateTrack<Ident>("ident");
+    Factory.CreateTrack<Power>("power");
+    Factory.CreateTrack<Polynomial>("polynomial");
+    Factory.CreateTrack<Exp>("exp")
+    
+    auto p = Factory.gimme("polynomial",{1,2,1});
+    ASSERT_DOUBLE_EQ(GD(*p,0.0001,100),-1.0);
 }
 
 int main(int argc, char** argv)
