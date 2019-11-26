@@ -87,7 +87,7 @@ class Function
 		virtual void who() {}
 		virtual double value(const double i = 0) const { return val(i);}
 		virtual double derivative(const double i = 0) const { return der(i);}
-		virtual std::string ToString() const {return strp;}
+		virtual std::string ToString() const {return "Unknown info";}
 
 		template<class T,class S>
 		friend Function operator+(const T& a, const S& b);
@@ -168,12 +168,12 @@ class Polynomial: public Function
 		}
 		std::string ToString() const
 		{
-			std::string sum = DoubleConv(this->vals[0]);;
+			std::string sum = DoubleConv(this->vals[0]);
 			for(int i = 1; i < this->vals.size(); ++i)
 			{
 				sum += "+" + DoubleConv(this->vals[i]) + "x^" + IntConv(i);
 			}
-			return std::string("x^") + DoubleConv(this->vals[0]);
+			return sum;
 		}
 };
 
@@ -205,11 +205,12 @@ Function operator+(const T& a, const S& b)
     }
 	else
 	{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) + b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) + b.derivative(j);};
-	new_el.strp += a.ToString() + "+" + b.ToString();
-	return new_el; }
+		Function new_el;
+		new_el.val = [&](double j){return a.value(j) + b.value(j);};
+		new_el.der = [&](double j){return a.derivative(j) + b.derivative(j);};
+		new_el.strp += a.ToString() + "+" + b.ToString();
+		return new_el;
+	}
 }
 template<class T,class S>
 Function operator-(const T& a, const S& b)
@@ -220,11 +221,12 @@ Function operator-(const T& a, const S& b)
     }
 	else
 	{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) - b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) - b.derivative(j);};
-	new_el.strp += a.ToString() + "-" + b.ToString();
-	return new_el; }
+		Function new_el;
+		new_el.val = [&](double j){return a.value(j) - b.value(j);};
+		new_el.der = [&](double j){return a.derivative(j) - b.derivative(j);};
+		new_el.strp += a.ToString() + "-" + b.ToString();
+		return new_el;
+	}
 }
 template<class T,class S>
 Function operator*(const T& a, const S& b)
@@ -235,11 +237,11 @@ Function operator*(const T& a, const S& b)
     }
 	else
 	{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) * b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) * b.derivative(j);};
-	new_el.strp += a.ToString() + "*" + b.ToString();
-	return new_el;
+		Function new_el;
+		new_el.val = [&](double j){return a.value(j) * b.value(j);};
+		new_el.der = [&](double j){return a.derivative(j) * b.derivative(j);};
+		new_el.strp += a.ToString() + "*" + b.ToString();
+		return new_el;
 	}
 }
 template<class T,class S>
@@ -251,11 +253,11 @@ Function operator/(const T& a, const S& b)
     }
 	else
 	{
-	Function new_el;
-	new_el.val = [&](double j){return a.value(j) / b.value(j);};
-	new_el.der = [&](double j){return a.derivative(j) / b.derivative(j);};
-	new_el.strp += a.ToString() + "/" + b.ToString();
-	return new_el;
+		Function new_el;
+		new_el.val = [&](double j){return a.value(j) / b.value(j);};
+		new_el.der = [&](double j){return a.derivative(j) / b.derivative(j);};
+		new_el.strp += a.ToString() + "/" + b.ToString();
+		return new_el;
 	}
 }
 
@@ -272,21 +274,4 @@ double GD(const Function& g, double eps, int j)
 		x = x - (1/std::pow(i,2))*f.derivative(x); x;
 	}
 	return x;
-}
-
-int main(void)
-{
-    Mark_Factory<std::string,Function,std::vector<double>> Factory;
-    
-    Factory.CreateTrack<Const>("const");
-    Factory.CreateTrack<Ident>("ident");
-    Factory.CreateTrack<Power>("power");
-    Factory.CreateTrack<Polynomial>("polynomial");
-    Factory.CreateTrack<Exp>("exp");
-    
-    auto b = Factory.gimme("polynomial",{1,2,1});
-    auto a = Factory.gimme("const",1.3);
-	auto e = Factory.gimme("ident");
-	Const aq(1.3);
-    return 0;
 }
