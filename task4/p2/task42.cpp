@@ -41,8 +41,6 @@ constexpr bool are_same_v = are_same<Args...>().value;
 
 int main(void)
 {
-	are_same<int,char> a;
-	std::cout<<a.value;
-		static_assert(are_same_v<int,int>, "compile assert");
+	static_assert(are_same_v<int,int>, "compile assert");
 	return 0;
 }
