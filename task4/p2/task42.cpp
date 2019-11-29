@@ -42,5 +42,6 @@ constexpr bool are_same_v = are_same<Args...>().value;
 int main(void)
 {
 	static_assert(are_same_v<int,int>, "compile assert");
+	//static_assert(are_same_v<int, int32_t, signed int>, "compile assert");
 	return 0;
 }
