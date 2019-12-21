@@ -76,7 +76,7 @@ class Function // Базовый класс
 		{}
 		Function(const double i): vals(std::vector({i}))
 		{}
-		Function()
+		Function(): vals(std::vector({1.}))
 		{}
 		Function(const Function& other)
 		{
@@ -91,13 +91,29 @@ class Function // Базовый класс
 		virtual std::string ToString() const {return "Unknown info";}
 
 		template<class T,class S>
-		friend Function operator+(const T& a, const S& b);
+		friend
+		typename std::enable_if<std::is_base_of_v<Function, T>
+								|| // или
+				std::is_base_of_v<Function, S>, Function>::type
+			operator+(const T& a, const S& b);
 		template<class T,class S>
-		friend Function operator-(const T& a, const S& b);
+		friend
+		typename std::enable_if<std::is_base_of_v<Function, T>
+								|| // или
+				std::is_base_of_v<Function, S>, Function>::type
+			operator-(const T& a, const S& b);
 		template<class T,class S>
-		friend Function operator*(const T& a, const S& b);
+		friend
+		typename std::enable_if<std::is_base_of_v<Function, T>
+								|| // или
+				std::is_base_of_v<Function, S>, Function>::type
+			operator*(const T& a, const S& b);
 		template<class T,class S>
-		friend Function operator/(const T& a, const S& b);
+		friend
+		typename std::enable_if<std::is_base_of_v<Function, T>
+								|| // или
+				std::is_base_of_v<Function, S>, Function>::type
+			operator/(const T& a, const S& b);
 		
 		virtual ~Function(){}
 
@@ -151,7 +167,7 @@ class Polynomial: public Function // Полином (a0 + a1*x + a2*x^2 + ... + 
 		{
 			if (this->vals.size() < 1) return 0.0;
 			 double sum = this->vals[0];
-			 for(int j = 1; j < this->vals.size(); ++j)
+			 for(unsigned int j = 1; j < this->vals.size(); ++j)
 			 {
 				 sum += this->vals[j]*pow(i,j);
 			 }
@@ -161,7 +177,7 @@ class Polynomial: public Function // Полином (a0 + a1*x + a2*x^2 + ... + 
 		{
 			 if (this->vals.size() < 2) return 0.0;
 			 double sum = this->vals[1];
-			 for(int j = 2; j < this->vals.size(); ++j) 
+			 for(unsigned int j = 2; j < this->vals.size(); ++j) 
 			 {
 				 sum += this->vals[j]*j*pow(i,j-1);
 			 }
@@ -170,9 +186,12 @@ class Polynomial: public Function // Полином (a0 + a1*x + a2*x^2 + ... + 
 		std::string ToString() const
 		{
 			std::string sum = DoubleConv(this->vals[0]);
-			for(int i = 1; i < this->vals.size(); ++i)
+			for(unsigned int i = 1; i < this->vals.size(); ++i)
 			{
-				sum += "+" + DoubleConv(this->vals[i]) + "x^" + IntConv(i);
+				if (this->vals[i] >= 0)
+					sum += "+" + DoubleConv(this->vals[i]) + "x^" + IntConv(i);
+				else
+					sum += "-" + DoubleConv(-(this->vals[i])) + "x^" + IntConv(i);
 			}
 			return sum;
 		}
@@ -198,7 +217,10 @@ class Power: public Function //  Степенная функция (x^k)
 };
 
 template<class T,class S>
-Function operator+(const T& a, const S& b)
+	typename std::enable_if<std::is_base_of_v<Function,T>
+							|| // или
+			std::is_base_of_v<Function,S>, Function>::type
+	operator+(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
 	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
@@ -209,12 +231,14 @@ Function operator+(const T& a, const S& b)
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) + b.value(j);};
 		new_el.der = [&](double j){return a.derivative(j) + b.derivative(j);};
-		new_el.strp += a.ToString() + "+" + b.ToString();
 		return new_el;
 	}
 }
 template<class T,class S>
-Function operator-(const T& a, const S& b)
+	typename std::enable_if<std::is_base_of_v<Function,T>
+							|| // или
+			std::is_base_of_v<Function,S>, Function>::type
+	operator-(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
 	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
@@ -229,7 +253,10 @@ Function operator-(const T& a, const S& b)
 	}
 }
 template<class T,class S>
-Function operator*(const T& a, const S& b)
+	typename std::enable_if<std::is_base_of_v<Function,T>
+							|| // или
+			std::is_base_of_v<Function,S>, Function>::type
+	operator*(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
 	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
@@ -239,12 +266,15 @@ Function operator*(const T& a, const S& b)
 	{
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) * b.value(j);};
-		new_el.der = [&](double j){return a.derivative(j) * b.derivative(j);};
+		new_el.der = [&](double j){return a.value(j) * b.derivative(j) + b.value(j) * a.derivative(j) ;};
 		return new_el;
 	}
 }
 template<class T,class S>
-Function operator/(const T& a, const S& b)
+	typename std::enable_if<std::is_base_of_v<Function,T>
+							|| // или
+			std::is_base_of_v<Function,S>, Function>::type
+	operator/(const T& a, const S& b)
 {
 	if constexpr (std::is_base_of_v<Function, T> == false || std::is_base_of_v<Function, S> == false)
 	{ // Если не совпадает с базовым классом или не потомок, тогда кидаем исключение
@@ -254,27 +284,22 @@ Function operator/(const T& a, const S& b)
 	{
 		Function new_el;
 		new_el.val = [&](double j){return a.value(j) / b.value(j);};
-		new_el.der = [&](double j){return a.derivative(j) / b.derivative(j);};
+		new_el.der = [&](double j){return (b.value(j) * a.derivative(j) - a.value(j) * b.derivative(j)) / (b.value(j)*b.value(j));};
 		return new_el;
 	}
 }
 
-double GD(const Function& g, double eps, int j) // Метод градиентного спуска с квадратично убывающим показателем (сходится при любом начальном приближении)
+double GD(const Function& g, double eps, int j) // Метод градиентного спуска с квадратично убывающим показателем
 {
 	double y = 1.,x = 0.;
 	int count = 0;
 	Function f = g*g;
 	if (std::abs(f.derivative(x)) < eps ) x+=eps;
-	for(double i = 2.; count == 0 || ((f.value(x)-f.value(y)) > eps) &&  (count < j); i += 1.)
+	for(double i = 2.; count == 0 || (((f.value(x)-f.value(y)) > eps) &&  (count < j)); i += 1.)
 	{
 		++count;
 		y = x;
-		x = x - (1/std::pow(i,2))*f.derivative(x); x;
+		x = x - (1/std::pow(i,2))*f.derivative(x);
 	}
 	return x;
-}
-
-int main(void)
-{
-	return 0;
 }
